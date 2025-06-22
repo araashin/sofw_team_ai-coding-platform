@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>LLM/VLM 질문 시스템</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="icon" href="{{ url_for('static', filename='COS.ico') }}" type="image/x-icon" />
+
+    <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+/>
+    <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+/>
+    <link
+    id="hljs-theme"
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css"
+/>
+
+    <style>
+    html, body { height:100%; margin:0; overflow:hidden; }
+    :root {
+        --bg-light:     #f8f9fa;
+        --bg-dark:      #0d1117;
+        --fg-light:     #212529;
+        --fg-dark:      #ffffff;
+        --card-light:   #ffffff;
+        --card-dark:    #161b22;
+        --border-light: #dee2e6;
+        --border-dark:  #30363d;
+        --top-offset:   4rem;
+        --sidebar-w:    240px;
+        --h-margin:     1rem;
+        --b-margin:     1rem;
+        --btn-light:    #f5f6f8;
+        --btn-light-hover: #e2e5ea;
+        --btn-dark:     #22262c;
+        --btn-dark-hover: #41454b;
+        }
+        body.light-theme { background: var(--bg-light); color: var(--fg-light); }
+        body.dark-theme  { background: var(--bg-dark);  color: var(--fg-dark);  }
+
+    .sidebar {
+        position: absolute; top:0; bottom:0; left:0;
+        width: var(--sidebar-w);
+        background: var(--bg-light);
+        border-right: 1px solid var(--border-light);
+        display: flex; flex-direction: column; z-index:2;
+        transition: transform .3s;
+        }
+        body.dark-theme .sidebar {
+        background: var(--bg-dark);
+        border-color: var(--border-dark);
+        }
+#problemList {
+    width: 215px;           
+    min-width: 200px;       
+    max-width: 98%;        
+    min-height: 100px;     
+    max-height: 330px;      
+    border-radius: 1.2rem;
+    padding: 0.0rem 0.0rem;       
+    border: 2px solid #383b40;
+    margin: 0 auto;        
+    box-sizing: border-box;
+    overflow: hidden;          
+    position: relative;
+}
+#problemSearch {
+    width: 190px;            
+    margin: 0.5rem auto 0.5rem 0;  
+    display: block;           
+    border-radius: 0.50rem;   
+    box-sizing: border-box;   
+}
+body.dark-theme #problemList {
+    background: #24262a !important;
+    border: 1.5px solid #32363d;
+}
+body.light-theme #problemList {
+    background: var(--bg-light);      
+    border: 1.5px solid var(--border-light); 
+}
+
+#problemList .problem-scroll-inner {
+    height: calc(100% - 3.5rem);
+    max-height: 430px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 1.2rem;
+}
+body.light-theme #problemSearch {
+  background: var(--card-light) !important;  
+  color: var(--fg-light) !important;         
+  border: 1px solid var(--border-light) !important;
+}
+
+
+body.dark-theme #problemSearch {
+  background: var(--card-dark) !important;    
+  color: var(--fg-dark) !important;           
+  border: 1px solid var(--border-dark) !important;
+}
+
+body.dark-theme #problemList {
+    background: #24262a !important;  
+    border: 1.5px solid #32363d;
+}
+
+
+#problemList .list-group-item {
+    background: #fff !important;
+    border: none;
+    color: #222;
+    border-radius: 0.50rem;
+    margin-bottom: 0.33rem;   
+    padding: 0.40rem 1.4rem 0.40rem 1.1rem;
+    font-size: 1.08rem;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(210,210,220,0.07); 
+    transition: background 0.15s, color 0.13s;
+    width: 92%;          
+    margin: 0 auto 0.33rem auto;  
+}
+#problemList .list-group-item:last-child {
+    margin-bottom: 0;
+}
+#problemList .list-group-item:hover {
+    background: #e5e8ef !important;
+    color: #111;
+}
+#problemList .list-group-item.active {
+    background: #dde1e6 !important;
+    color: #183563 !important;
+    font-weight: 600;
+}
+body.dark-theme #problemList .list-group-item {
+    background: #292c33 !important;
+    color: #e7e7ee;
+    box-shadow: 0 1px 3px rgba(60,60,80,0.15);
+}
+body.dark-theme #problemList .list-group-item:hover {
+    background: #373b42 !important;
+}
+body.dark-theme #problemList .list-group-item.active {
+    background: #121316 !important;
+    color: #dde7fa !important;
+    font-weight: 600;
+}
+body.light-theme #problemList .list-group-item.active {
+    background: #e9ecef !important;  
+    color:  #212529 !important; 
+    font-weight: 600;
+}
+
+body.dark-theme #problemList .list-group-item {
+    background: #292c33 !important;
+    border: 1.2px solid #454950 !important;
+    color: #e7e7ee;
+}
+body.dark-theme #problemList .list-group-item:hover {
+    background: #373b42 !important;
+    border-color: #888 !important;
+}
+body.dark-theme #problemList .list-group-item.active {
+    background: #121316 !important;
+    border-color: #6293d4 !important;
+    color: #dde7fa !important;
+    font-weight: 600;
+}
+
+    #problemList .list-group-item:hover,
+    #problemList .list-group-item.active {
+        background: #e9ecef;
+        color: #111;
+    }
+    body.dark-theme #problemList .list-group-item:hover,
+    body.dark-theme #problemList .list-group-item.active {
+        background: #23272e;
+        color: #fff;
+    }
+    body.expanded .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar .header.menu-logo-row {
+        padding: 0.6rem 0.3rem 1rem 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        justify-content: space-between;
+    }
+    .sidebar .header.menu-logo-row img.site-logo-img {
+        width: 36cccpx !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    max-width: 36px !important;
+    max-height: 36px !important;
+    border-radius: 12px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .sidebar .header { padding:0.7rem 1rem 1rem 1rem; display:flex; align-items:center; gap:.5rem; }
+
+    .menu-btn {
+            padding: .25rem; background: transparent; border: none; cursor: pointer;
+        color: var(--fg-light);
+    }
+    body.dark-theme .menu-btn { color: var(--fg-dark); }
+    .menu-btn:hover {
+        background: rgba(0,0,0,0.05); border-radius: .25rem;
+    }
+    body.dark-theme .menu-btn:hover {
+        background: rgba(255,255,255,0.05);
+    }
+
+.new-chat-btn {
+    width: 215px;          
+    height: 45px;            
+    margin: 0 auto 0.7rem auto;    
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; 
+    font-size: 1.18rem;    
+    font-weight: 500;
+    border-radius: 0.50rem;
+    gap: 0.8rem;
+    cursor: pointer;
+    background: #f8f9fa;
+    color: var(--fg-light);
+    border: 1.5px solid #d4d7dc;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    transition: background 0.18s, border-color 0.18s;
+}
+
+    .new-chat-btn i {
+        font-size: 1.2em;
+    }
+    .new-chat-btn:active {
+        filter: brightness(0.97);
+    }
+    .new-chat-btn:hover {
+        background: var(--btn-light-hover);
+        border-color: #b3b7bd;
+    }
+    body.dark-theme .new-chat-btn {
+        background: var(--btn-dark);
+        color: var(--fg-dark);
+        border: none;
+    }
+    body.dark-theme .new-chat-btn:hover {
+        background: var(--btn-dark-hover);
+    }
+    #toggleProblemBtn {
+        width: 215px;    
+        height: 45px;    
+        min-height: unset;  
+        font-size: 1.18rem;
+        font-weight: 500;
+        border-radius: 0.50rem;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e9ecef !important;
+        color: #fff !important;
+        border: none;
+        margin-bottom: 0.7rem;
+        letter-spacing: 0.03em;
+        box-shadow: 0 1.5px 4px rgba(120,130,140,0.09);
+        transition: background 0.15s, color 0.15s;
+    }
+
+    body.light-theme #toggleProblemBtn {
+    color: #000 !important;
+    border: 1px solid #adb5bd !important;  
+    background: #e9ecef !important; 
+}
+
+    body.dark-theme #toggleProblemBtn {
+        background: #727980 !important;
+        color: #fff !important;
+    }
+    #toggleProblemBtn:hover {
+        background: #626a71 !important;
+    }
+
+    .question-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 0.75rem 0;
+    }
+    .question-list .question-item {
+        width: 90%;
+        margin: 0.3rem auto;
+        padding: 0;
+    }
+    .question-list .question-btn {
+    width: 215px;
+    height: 45px;
+    margin: 0 auto 0.7rem auto;   
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border: 1.5px solid #d4d7dc;
+    border-radius: 0.6rem;
+    color: var(--fg-light);
+    text-align: left;
+    font-size: 1rem;
+    padding: 0 1rem;
+    cursor: pointer;
+    transition: background 0.14s, border-color 0.14s;
+    box-shadow: 0 0.5px 0.5px rgba(60,70,100,0.03);
+}
+    .question-list .question-btn.active {
+        background: #e9ecef;
+        border-color: #adb5bd;
+    }
+    .question-list .question-btn:hover {
+        background: #e9ecef;
+        border-color: #b3b7bd;
+    }
+    body.dark-theme .question-list .question-btn {
+        color: var(--fg-dark);
+        background: #23272e; 
+        border-color: #41454b;
+    }
+    body.dark-theme .question-list .question-btn.active {
+        background: #161b22;  
+        border-color: #6a6f7a;
+    }
+    body.dark-theme .question-list .question-btn:hover:not(.active) {
+        background: #22262c;  
+        border-color: #585d67;
+    }
+
+
+    .expand-btn {
+        position: fixed; top: 1rem; left: var(--sidebar-w);
+        width: 3.5rem; height: 2.5rem;
+        border: none; background: transparent;
+        color: var(--fg-light);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 1.4rem;
+        z-index: 3;
+        transition: left .3s;
+    }
+    body.dark-theme .expand-btn { color: var(--fg-dark); }
+    body.expanded .expand-btn { left: 0.1rem; }
+
+    .main-area {
+        position: absolute; 
+        top: var(--top-offset); 
+        bottom:0;
+        left: var(--sidebar-w); 
+        right:0;
+        padding: 0 var(--h-margin) var(--b-margin); 
+        overflow:hidden;  
+        transition: left .3s;
+        height: calc(100% - var(--top-offset));
+    }
+    body.expanded .main-area { left: 0; }
+
+    .chat-box {
+        height:100%; display:flex; flex-direction:column;
+        border:1px solid var(--border-light); border-radius:.75rem;
+        background: var(--card-light);
+        box-shadow:0 2px 8px rgba(0,0,0,0.1); overflow:hidden;
+    }
+    .bubble {
+        max-width: 95%;
+        word-break: break-all;
+        white-space: pre-line;
+        font-size: 1.1rem;
+        line-height: 1.1;
+        padding: 0.08rem 0.3rem 0.08rem 0.10rem;  
+        display: flex;                  
+        align-items: flex-start;         
+        gap: 0.18em;                     
+    }
+
+    body.dark-theme .chat-box {
+        background: var(--card-dark);
+        border-color: var(--border-dark);
+        box-shadow:0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    .chat-box .messages {
+    flex: 1 1 0%;
+    min-height: 0;
+    padding: 1rem;
+    overflow-y: auto;
+    }
+    .message { margin-bottom:1rem; }
+    .message.user { text-align:right; }
+    .message.user .bubble {
+        display:inline-block; padding:.5rem 1rem;
+        background:#0d6efd; color:#fff;
+        border-radius:.75rem .75rem .25rem .75rem;
+    }
+    .message.bot .bubble {
+        display:inline-block; padding:.5rem 1rem;
+        background:#e9ecef; color:#212529;
+        border-radius:.75rem .75rem .75rem .25rem;
+    }
+    body.dark-theme .message.bot .bubble {
+        background:#30363d; color:#c9d1d9;
+    }
+
+    .chat-input {
+        padding:.5rem; border-top:1px solid var(--border-light);
+        background: var(--card-light);
+    }
+    body.dark-theme .chat-input {
+        border-color: var(--border-dark);
+        background: var(--card-dark);
+    }
+    .btn-attach {
+        border-radius:.25rem 0 0 .25rem;
+        border:1px solid var(--border-light); border-right:0;
+        background: var(--card-light); color: var(--fg-light);
+    }
+    body.dark-theme .btn-attach {
+        border-color: var(--border-dark);
+        background: var(--card-dark); color: var(--fg-dark);
+    }
+    .form-control {
+        border-radius:0 .25rem .25rem 0;
+        border:1px solid var(--border-light); border-left:0;
+        background: var(--card-light); color: var(--fg-light);
+    }
+    body.dark-theme .form-control {
+        border-color: var(--border-dark);
+        background: var(--bg-dark); color: var(--fg-dark);
+    }
+    .form-control::placeholder { color:#6c757d; }
+    body.dark-theme .form-control::placeholder { color:#adb5bd; }
+
+    .btn-primary { margin-left:.25rem; }
+
+    .theme-toggle {
+        position:fixed; top:1rem; right:1rem;
+        width:2.5rem; height:2.5rem; border:none; border-radius:50%;
+        background: var(--card-light); color: var(--fg-light);
+        display:flex; align-items:center; justify-content:center;
+        cursor:pointer; font-size:1.2rem; z-index:3;
+        box-shadow:0 0 .5rem rgba(0,0,0,0.1);
+    }
+    body.dark-theme .theme-toggle {
+        background: var(--card-dark); color: var(--fg-dark);
+        box-shadow:0 0 .5rem rgba(255,255,255,0.1);
+    }
+
+    .custom-modal-bg {
+        position: fixed;
+        top:0; left:0; width:100vw; height:100vh;
+        background: rgba(30,34,43,0.19);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999;
+    }
+    .custom-modal-box {
+        background: var(--card-light);
+        color: var(--fg-light);
+        border-radius: 1.1rem;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+        min-width: 450px; max-width: 92vw;
+        padding: 2.5rem 2.1rem 1.4rem 2.1rem;
+        text-align: center;
+        border: 1.5px solid #dde0e4e9;
+        font-size: 1.09rem;
+        transition: background .2s, color .2s;
+    }
+    body.dark-theme .custom-modal-box {
+        background: var(--card-dark);
+        color: var(--fg-dark);
+        border-color: #30363d;
+    }
+    .custom-modal-box label {
+        font-weight: bold; font-size: 1.09rem; display:block; margin-bottom: 1.1rem;
+    }
+    .custom-modal-box input {
+        width: 80%; margin:0 auto 1.6rem auto;
+        padding: .60rem 1.1rem;
+        font-size: 1.07rem;
+        border-radius: 0.6rem;
+        border: 1.5px solid #b3b7bd;
+        outline: none;
+        display: block;
+        background: var(--bg-light);
+        color: var(--fg-light);
+        transition: border .15s;
+    }
+    body.dark-theme .custom-modal-box input {
+        background: var(--bg-dark); color: var(--fg-dark);
+        border: 1.5px solid #41454b;
+    }
+    .custom-modal-box .modal-btns {
+        display: flex; gap: 1rem; justify-content: center;
+    }
+    .custom-modal-box button {
+        border-radius: 0.5rem; border: none;
+        padding: 0.49rem 1.13rem; font-weight: 500;
+        font-size: 1.01rem; cursor: pointer;
+        background: #3a8afd; color: #fff;
+        transition: background .16s;
+    }
+    .custom-modal-box button:hover { background: #256bcc; }
+    .custom-modal-box button:last-child {
+        background: #e3e6eb; color: #222;
+    }
+    .custom-modal-box button:last-child:hover {
+        background: #d1d4d9;
+    }
+    body.dark-theme .custom-modal-box button:last-child {
+        background: #31333a; color: #eee;
+    }
+    body.dark-theme .custom-modal-box button:last-child:hover {
+        background: #474a56;
+    }
+    @media (max-width: 520px) {
+        .custom-modal-box { min-width: 94vw; padding:1.2rem 0.5rem; }
+    }
+    code.hljs {
+        display:block; padding:1rem; border-radius:.3rem;
+        margin-bottom:1rem; overflow-x:auto; white-space:pre;
+        background:none;
+    }
+    .question-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.3rem;
+    }
+    .question-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7em;
+        position: relative;
+    }
+    .question-menu-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0em;
+        font-size: 1.3em;
+        color: #999;
+        transition: color 0.15s;
+        border-radius: 0.4em;
+        outline: none;
+        margin-left: 0em;
+    }
+    .question-menu-btn:hover {
+        color: #3a8afd;
+        background: #f2f4f8;
+    }
+    body.dark-theme .question-menu-btn:hover {
+        background: #2b2e35;
+    }
+    #questionActionMenu {
+        position: absolute;
+        z-index: 9999;
+        background: var(--card-light);
+        color: var(--fg-light);
+        border: 1.5px solid #dde0e4e9;
+        border-radius: 0.65rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.13);
+        min-width: 112px;
+        padding: 0.2em 0;
+    }
+    body.dark-theme #questionActionMenu {
+        background: var(--card-dark);
+        color: var(--fg-dark);
+        border: 1.5px solid #41454b;
+    }
+    #questionActionMenu button {
+        background: none;
+        border: none;
+        width: 100%;
+        padding: 0.7em 1.1em;
+        text-align: left;
+        cursor: pointer;
+        font-size: 1.04em;
+        color: inherit;
+        border-radius: 0.5em;
+        transition: background 0.13s;
+    }
+    #questionActionMenu button:hover {
+        background: #f4f7fb;
+    }
+    body.dark-theme #questionActionMenu button:hover {
+        background: #23272e;
+    }
+    #questionActionMenu .menu-delete-btn {
+        color: #ed5a5a;
+    }
+    .message.user {
+        text-align: right;
+        margin-right: 7.5px;
+    }
+    .message.bot {
+        text-align: left;
+        margin-left: 7.5px;
+    }
+    .bubble code, .bubble pre, .bubble .hljs {
+        display: block;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 1em;
+        background: none;
+        box-sizing: border-box;
+        border-radius: 0.3rem;
+        margin-bottom: 0.5rem;
+        white-space: pre;
+    }
+    .bubble code::-webkit-scrollbar,
+    .bubble pre::-webkit-scrollbar,
+    .bubble .hljs::-webkit-scrollbar {
+        display: none;
+    }
+    body.light-theme ::-webkit-scrollbar {
+    width: 10px;
+    background: #e9ecef;
+    }
+    body.light-theme ::-webkit-scrollbar-thumb {
+        background: #bdbdbd;
+        border-radius: 6px;
+    }
+    body.light-theme ::-webkit-scrollbar-thumb:hover {
+        background: #909090;
+    }
+
+    body.dark-theme ::-webkit-scrollbar {
+        width: 10px;
+        background: #23272e;
+    }
+    body.dark-theme ::-webkit-scrollbar-thumb {
+        background: #484b51;
+        border-radius: 6px;
+    }
+    body.dark-theme ::-webkit-scrollbar-thumb:hover {
+        background: #686c71;
+    }
+    .waiting-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.4em;
+        font-size: 1.08em;
+        margin-top: 0.04em;    
+        margin-bottom: 0.04em; 
+        justify-content: center;
+    }
+    .hourglass {
+        width: 28px;
+        height: 28px;
+        display: inline-block;
+        vertical-align: middle;
+        animation: hourglass-spin 1.2s cubic-bezier(.73,.2,.4,.94) infinite;
+    }
+    @keyframes hourglass-spin {
+        0%   { transform: rotate(0deg);}
+        45%  { transform: rotate(180deg);}
+        55%  { transform: rotate(180deg);}
+        100% { transform: rotate(360deg);}
+    }
+.message.user .bubble,
+.message.bot .bubble {
+    text-align: left !important;
+}
+    #filePreview {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: var(--card-light);
+        border-top: 1px solid var(--border-light);
+    }
+    #filePreview img {
+        max-height: 3rem;
+        border-radius: 0.25rem;
+    }
+    #filePreview span {
+        flex: 1;
+        word-break: break-all;
+    }
+    body.light-theme #filePreview {
+      background: var(--card-light);
+      border-top: 1px solid var(--border-light);
+      color: var(--fg-light);
+    }
+
+    body.dark-theme #filePreview {
+      background: var(--card-dark);
+      border-top: 1px solid var(--border-dark);
+      color: var(--fg-dark);
+    }
+</style>
+</head>
+<body class="light-theme">
+
+<div class="sidebar">
+    <div class="header menu-logo-row">
+        <img src="{{ url_for('static', filename='COS.ico') }}" class="site-logo-img" />
+        <span class="menu-title"></span>
+    </div>
+    <button class="new-chat-btn" type="button" id="newChatBtn">
+        <i class="bi bi-plus-lg"></i>
+        새 채팅
+    </button>
+    <button class="btn btn-secondary my-2" id="toggleProblemBtn">문제 리스트</button>
+    <div id="problemList" class="list-group" style="display:none;"></div>
+
+    <div class="header">
+        <span class="fs-6">채팅</span>
+    </div>
+    <ul class="question-list" id="questionList"></ul>
+</div>
+
+    <button id="expandBtn" class="expand-btn" title="채팅창 확장/축소">
+    <i class="bi bi-layout-sidebar"></i>
+    </button>
+
+    <button id="themeToggle" class="theme-toggle">
+    <i id="iconToggle" class="bi bi-moon"></i>
+    </button>
+
+    <div class="main-area">
+        <div class="chat-box">
+            <div class="messages" id="messages">
+                {% if question %}
+                    <div class="message user"><div class="bubble">{{ question }}</div></div>
+                {% endif %}
+                {% if answer %}
+                    <div class="message bot"><div class="bubble">{{ answer|safe }}</div></div>
+                {% endif %}
+            </div>
+             <div class="chat-input">                      
+                <div id="filePreview"
+                     style="display:none; padding:.5rem;">
+                </div>
+
+                <form id="chatForm"
+                      method="POST"
+                      action="/generate"
+                      enctype="multipart/form-data"
+                      class="input-group"
+                      novalidate>
+                    <label for="fileInput"
+                           class="btn btn-outline-secondary btn-attach mb-0">
+                        <i class="bi bi-paperclip"></i>
+                    </label>
+                    <input type="file"
+                           id="fileInput"
+                           name="image"
+                           class="d-none"
+                           multiple />
+                    <textarea id="questionInput"
+                              name="question"
+                              class="form-control"
+                              rows="2"
+                              placeholder="코드 또는 질문을 입력하세요."
+                              autocomplete="off"
+                              required></textarea>
+                    <button class="btn btn-primary"
+                            type="submit">
+                        전송
+                    </button>
+                </form>
+                <div id="gradingResult" class="mt-2"></div>
+            </div>                                        
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  hljs.highlightAll();
+
+  const fileInput   = document.getElementById("fileInput");
+  const filePreview = document.getElementById("filePreview");
+
+  function renderFilePreview() {
+    const files = Array.from(fileInput.files);
+    if (!files.length) {
+      filePreview.style.display = "none";
+      filePreview.innerHTML = "";
+      return;
+    }
+    filePreview.innerHTML = files.map((file, idx) => `
+      <div class="file-item" data-idx="${idx}"
+           style="display:flex; align-items:center; margin-bottom:.3rem;">
+        ${file.type.startsWith("image/")
+          ? `<img src="${URL.createObjectURL(file)}"
+                   style="max-height:3rem; margin-right:.5rem;">`
+          : `<i class="bi bi-file-earmark-text"
+                 style="font-size:1.8rem; margin-right:.5rem;"></i>`
+        }
+        <span style="flex:1; word-break:break-all;">${file.name}</span>
+        <button type="button"
+                class="btn btn-sm btn-outline-danger remove-file-btn"
+                style="margin-left:.5rem;">×</button>
+      </div>
+    `).join("");
+    filePreview.style.display = "flex";
+  }
+
+  fileInput.addEventListener("change", renderFilePreview);
+
+  filePreview.addEventListener("click", e => {
+    if (!e.target.classList.contains("remove-file-btn")) return;
+    const idx = +e.target.closest(".file-item").dataset.idx;
+    const dt  = new DataTransfer();
+    Array.from(fileInput.files).forEach((file, i) => {
+      if (i !== idx) dt.items.add(file);
+    });
+    fileInput.files = dt.files;
+    renderFilePreview();
+  });
+
+  const tgl       = document.getElementById("themeToggle"),
+        ico       = document.getElementById("iconToggle"),
+        hljsTheme = document.getElementById("hljs-theme"),
+        lightHref = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css",
+        darkHref  = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai-sublime.min.css";
+  let theme = localStorage.getItem("theme") || "light";
+  function applyTheme(t) {
+    const dark = t === "dark";
+    document.body.classList.toggle("dark-theme", dark);
+    document.body.classList.toggle("light-theme", !dark);
+    ico.className = dark ? "bi bi-sun" : "bi bi-moon";
+    hljsTheme.setAttribute("href", dark ? darkHref : lightHref);
+    localStorage.setItem("theme", t);
+  }
+  tgl.onclick = () => applyTheme(theme = theme === "light" ? "dark" : "light");
+  applyTheme(theme);
+
+  const expandBtn = document.getElementById("expandBtn");
+  expandBtn.onclick = () => document.body.classList.toggle("expanded");
+
+
+  let questionData     = [];
+  let activeQuestionIdx = -1;
+  const questionListEl = document.getElementById("questionList");
+  const messagesEl     = document.getElementById("messages");
+  const newChatBtn     = document.getElementById("newChatBtn");
+
+
+  function showModal(callback) {
+    if (document.getElementById("customModalBg")) return;
+    const modalBg = document.createElement("div");
+    modalBg.className = "custom-modal-bg";
+    modalBg.id = "customModalBg";
+    modalBg.innerHTML = `
+      <div class="custom-modal-box">
+        <label for="modalInput">채팅 제목을 입력하세요.</label>
+        <input id="modalInput" type="text" maxlength="40" autocomplete="off"
+               placeholder="새 질문 ${questionData.length+1}" />
+        <div class="modal-btns">
+          <button type="button" id="modalOkBtn">확인</button>
+          <button type="button" id="modalCancelBtn">취소</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modalBg);
+    const input = document.getElementById("modalInput");
+    input.focus();
+    input.onkeydown = e => {
+      if (e.key === "Enter") document.getElementById("modalOkBtn").click();
+    };
+    document.getElementById("modalOkBtn").onclick = () => {
+      const val = input.value.trim() || ("새 질문 " + (questionData.length+1));
+      document.body.removeChild(modalBg);
+      callback(val);
+    };
+    document.getElementById("modalCancelBtn").onclick = () => {
+      document.body.removeChild(modalBg);
+    };
+  }
+  newChatBtn.onclick = () => showModal(title => {
+    questionData.push({ title, messages: [] });
+    activeQuestionIdx = questionData.length - 1;
+    renderQuestionList();
+    renderMessages();
+  });
+
+
+  function renderQuestionList() {
+    questionListEl.innerHTML = "";
+    questionData.forEach((q, idx) => {
+      const li = document.createElement("li");
+      li.className = "question-item";
+      li.innerHTML = `
+        <button class="question-btn${idx === activeQuestionIdx ? " active" : ""}"
+                style="display:flex;align-items:center;justify-content:space-between;gap:0.7em;position:relative;">
+          <span style="flex:1;text-align:left;">${q.title}</span>
+          <span>
+            <button class="question-menu-btn" data-idx="${idx}" tabindex="-1">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+          </span>
+        </button>`;
+      questionListEl.appendChild(li);
+    });
+    document.querySelectorAll(".question-menu-btn").forEach(btn => {
+      btn.onclick = e => {
+        e.stopPropagation();
+        showQuestionMenu(+btn.dataset.idx, btn);
+      };
+    });
+    document.querySelectorAll(".question-btn").forEach((btn, idx) => {
+      btn.onclick = e => {
+        if (e.target.closest(".question-menu-btn")) return;
+        activeQuestionIdx = idx;
+        renderQuestionList();
+        renderMessages();
+      };
+    });
+  }
+
+
+  function escapeHTML(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+
+  function renderMessages() {
+    messagesEl.innerHTML = "";
+    const msgs = questionData[activeQuestionIdx].messages;
+    msgs.forEach(m => {
+      const div = document.createElement("div");
+      div.className = "message " + m.role;
+
+      if (m.role === "user" && m.files) {
+        div.innerHTML = m.files.map(f => `
+          <div class="bubble">
+            <img src="${f.url}"
+                 style="max-height:12rem; max-width:100%; border-radius:.3rem; margin-bottom:.3rem;">
+            <span>${f.name}</span>
+          </div>
+        `).join("");
+
+      } else if (m.role === "user") {
+        div.innerHTML = `<div class="bubble">${escapeHTML(m.content)}</div>`;
+
+      } else {
+        div.innerHTML = `<div class="bubble">${marked.parse(m.content)}</div>`;
+        setTimeout(() =>
+          div.querySelectorAll("pre code")
+             .forEach(block => hljs.highlightElement(block))
+        , 0);
+      }
+
+      messagesEl.appendChild(div);
+    });
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  document.getElementById("chatForm").onsubmit = async e => {
+    e.preventDefault();
+    const txt   = document.getElementById("questionInput").value.trim();
+    const files = Array.from(fileInput.files);
+    if ((!txt && !files.length) || activeQuestionIdx < 0) return;
+
+    const msg = { role: "user" };
+    if (files.length) {
+      msg.files = files.map(f => ({
+        name: f.name,
+        url: URL.createObjectURL(f)
+      }));
+    } else {
+      msg.content = txt;
+    }
+    questionData[activeQuestionIdx].messages.push(msg);
+    renderMessages();
+
+    document.getElementById("questionInput").value = "";
+    fileInput.value = "";
+    renderFilePreview();
+    const waitingDiv = document.createElement("div");
+    waitingDiv.className = "message bot";
+    waitingDiv.id = "waiting-indicator-message";
+    waitingDiv.innerHTML = `
+      <div class="bubble">
+        <span class="waiting-indicator" style="display:flex; align-items:center; gap:0.7em;">
+          <span>답변 생성 중...</span>
+        </span>
+      </div>`;
+    messagesEl.appendChild(waitingDiv);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    const formData = new FormData();
+    formData.append("question", txt);
+    files.forEach(f => formData.append("image", f));
+
+    try {
+      const res = await fetch("/generate", { method: "POST", body: formData });
+      document.getElementById("waiting-indicator-message")?.remove();
+      if (!res.ok) throw new Error(res.statusText);
+      const html = await res.text();
+      questionData[activeQuestionIdx].messages.push({ role: "bot", content: html });
+    } catch {
+      document.getElementById("waiting-indicator-message")?.remove();
+      questionData[activeQuestionIdx].messages.push({
+        role: "bot",
+        content: "서버 오류가 발생했습니다."
+      });
+    }
+    renderMessages();
+  };
+
+    if (questionData.length === 0) {
+        questionData.push({ title: "새 질문 1", messages: [
+        { role: "bot", content: "이곳에 AI 답변이 표시됩니다." }
+        ]});
+        activeQuestionIdx = 0;
+        renderQuestionList();
+        renderMessages();
+    }
+function showQuestionMenu(idx, anchorBtn) {
+    let old = document.getElementById("questionActionMenu");
+    if(old) old.remove();
+
+    const menu = document.createElement("div");
+    menu.id = "questionActionMenu";
+    menu.innerHTML = `
+        <button class="menu-rename-btn">이름 변경</button>
+        <button class="menu-delete-btn">삭제</button>
+    `;
+
+    const rect = anchorBtn.getBoundingClientRect();
+    menu.style.left = `${rect.right + window.scrollX - 120}px`;
+    menu.style.top = `${rect.top + window.scrollY + 30}px`;
+
+    document.body.appendChild(menu);
+
+    const closeMenu = (e) => {
+        if (!menu.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener("mousedown", closeMenu);
+        }
+    };
+    setTimeout(() => document.addEventListener("mousedown", closeMenu), 1);
+
+    menu.querySelector(".menu-rename-btn").onclick = () => {
+        menu.remove();
+        showRenameModal(idx);
+    };
+
+    menu.querySelector(".menu-delete-btn").onclick = () => {
+        menu.remove();
+        showDeleteConfirm(idx, () => {
+            questionData.splice(idx, 1);
+            if (activeQuestionIdx >= questionData.length) activeQuestionIdx = questionData.length - 1;
+            renderQuestionList();
+            renderMessages();
+        });
+    };
+}
+
+    function showRenameModal(idx) {
+    let old = document.getElementById("customModalBg");
+    if(old) old.remove();
+
+    const modalBg = document.createElement("div");
+    modalBg.className = "custom-modal-bg";
+    modalBg.id = "customModalBg";
+
+    modalBg.innerHTML = `
+        <div class="custom-modal-box">
+            <label for="modalInput"><b>질문 이름을 변경하세요</b></label>
+            <input id="modalInput" type="text" maxlength="40" autocomplete="off" value="${questionData[idx].title}" />
+            <div class="modal-btns">
+                <button type="button" id="modalOkBtn">확인</button>
+                <button type="button" id="modalCancelBtn">취소</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modalBg);
+    const input = document.getElementById("modalInput");
+    input.focus();
+
+    input.onkeydown = e => {
+        if(e.key === "Enter") document.getElementById("modalOkBtn").click();
+    };
+    document.getElementById("modalOkBtn").onclick = () => {
+        const val = input.value.trim() || ("질문" + (idx + 1));
+        questionData[idx].title = val;
+        document.body.removeChild(modalBg);
+        renderQuestionList();
+    };
+    document.getElementById("modalCancelBtn").onclick = () => {
+        document.body.removeChild(modalBg);
+    };
+}
+
+function showDeleteConfirm(idx, onConfirm) {
+    if(document.getElementById("deleteConfirmModal")) return;
+
+    const modal = document.createElement("div");
+    modal.id = "deleteConfirmModal";
+    modal.className = "custom-modal-bg";
+    modal.innerHTML = `
+    <div class="custom-modal-box">
+        <label>정말로 삭제하시겠습니까?</label>
+        <div class="modal-btns">
+        <button type="button" id="deleteOkBtn">예</button>
+        <button type="button" id="deleteCancelBtn">아니오</button>
+        </div>
+    </div>
+    `;
+document.body.appendChild(modal);
+
+document.getElementById("deleteOkBtn").onclick = () => {
+    document.body.removeChild(modal);
+        if (typeof onConfirm === "function") onConfirm();
+        };
+    document.getElementById("deleteCancelBtn").onclick = () => {
+    document.body.removeChild(modal);
+    };
+}
+const toggleProblemBtn = document.getElementById("toggleProblemBtn");
+const problemList = document.getElementById("problemList");
+const problemDetail = document.getElementById("problemDetail");
+const solutionInput = document.getElementById("solutionInput");
+const submitSolutionBtn = document.getElementById("submitSolutionBtn");
+const gradingResult = document.getElementById("gradingResult");
+
+let problemData = [];
+let selectedProblemId = null;
+
+toggleProblemBtn.onclick = async function() {
+    if (problemList.style.display === "none" || problemList.style.display === "") {
+        const res  = await fetch("/problems");
+        const data = await res.json();
+        problemData = data.problems || [];
+
+    if (!problemList.querySelector("#problemSearch")) {
+        problemList.innerHTML = `
+        <!-- 검색창 (한 번만) -->
+        <div style="padding:0.5rem; box-sizing:border-box;">
+            <input
+                type="text"
+                id="problemSearch"
+                placeholder="문제 검색..."
+                style="padding:0.4rem; border-radius:0.4rem;
+                    border:1px solid var(--border-light);
+                    background: var(--bg-light); color: var(--fg-light);
+                    box-sizing:border-box;"
+            />
+            </div>
+            <!-- 스크롤 영역 -->
+            <div class="problem-scroll-inner"></div>
+        `;
+
+        const searchInput = document.getElementById('problemSearch');
+        searchInput.addEventListener('keyup', () => {
+            const kw = searchInput.value.trim().toLowerCase();
+            if (!kw) return;
+            const items = problemList.querySelectorAll('.problem-scroll-inner .list-group-item');
+            for (let li of items) {
+            if (li.innerText.toLowerCase().includes(kw)) {
+                li.scrollIntoView({ behavior:'smooth', block:'center' });
+                li.classList.add('search-highlight');
+                setTimeout(() => li.classList.remove('search-highlight'), 800);
+                break;
+            }
+            }
+        });
+    }
+
+    const inner = problemList.querySelector('.problem-scroll-inner');
+    inner.innerHTML = ''; 
+
+    problemData.forEach((prob, idx) => {
+        const item = document.createElement("div");
+        item.className = "list-group-item list-group-item-action";
+        item.style.cursor = "pointer";
+        item.innerText = `[${prob.difficulty}] ${prob.title}`;
+        item.onclick = () => {
+            inner.querySelectorAll('.list-group-item')
+                .forEach(el => el.classList.remove('active'));
+            item.classList.add('active');
+            selectProblem(prob.id);
+        };
+        inner.appendChild(item);
+    });
+problemList.style.display = "block";
+const searchInput = document.getElementById('problemSearch');
+searchInput.addEventListener('keyup', () => {
+    const kw = searchInput.value.trim().toLowerCase();
+    if (!kw) return;
+    const items = inner.querySelectorAll('.list-group-item');
+    for (let li of items) {
+        if (li.innerText.toLowerCase().includes(kw)) {
+            li.scrollIntoView({ behavior:'smooth', block:'center' });
+            li.classList.add('search-highlight');
+            setTimeout(() => li.classList.remove('search-highlight'), 800);
+            break;
+        }
+    }
+});
+
+    } else {
+        problemList.style.display = "none";
+    }
+};
+
+async function selectProblem(pid) {
+    selectedProblemId = pid;
+    const res = await fetch(`/problem/${pid}`);
+    const prob = await res.json();
+    const messagesEl = document.getElementById("messages");
+    const div = document.createElement("div");
+    div.className = "message bot";
+    div.innerHTML = `<div class="bubble">[문제] ${prob.title}<br>${prob.description || ""}</div>`;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+if (submitSolutionBtn) {
+    submitSolutionBtn.onclick = async function() {
+        const code = solutionInput.value;
+        if(!selectedProblemId) return alert("문제를 선택하세요!");
+        if(!code.trim()) return alert("코드를 입력하세요!");
+
+        gradingResult.innerHTML = "채점 중...";
+        const res = await fetch("/submit", {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({pid: selectedProblemId, code})
+        });
+        const result = await res.json();
+        gradingResult.innerHTML = `
+            <div><b>채점 결과:</b> <span style="color:${result.is_correct ? 'blue' : 'red'}">${result.is_correct ? '정답' : '오답'}</span></div>
+            <div><b>모범 답안:</b><pre>${result.model_answer || "없음"}</pre></div>
+            <div><b>AI 코드리뷰:</b><pre>${result.review || ""}</pre></div>
+        `;
+        const messagesEl = document.getElementById("messages");
+        const userDiv = document.createElement("div");
+        userDiv.className = "message user";
+        userDiv.innerHTML = `<div class="bubble"><b>[내 풀이]</b><br>${code}</div>`;
+        messagesEl.appendChild(userDiv);
+        const botDiv = document.createElement("div");
+        botDiv.className = "message bot";
+        botDiv.innerHTML = `<div class="bubble"><b>[채점 결과]</b> ${result.is_correct ? '정답' : '오답'}<br><b>모범답안:</b><pre>${result.model_answer || "없음"}</pre><b>AI 코드리뷰:</b><pre>${result.review || ""}</pre></div>`;
+        messagesEl.appendChild(botDiv);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    };
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
